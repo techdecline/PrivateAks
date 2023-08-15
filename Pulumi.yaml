@@ -1,0 +1,3 @@
+name: PrivateAks
+runtime: dotnet
+description: PoC Private AKS with DNS Zone and Hub Integration
