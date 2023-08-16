@@ -8,6 +8,13 @@ return await Deployment.RunAsync(() =>
    // Set the stack name.
    var stackName = Deployment.Instance.StackName;
 
+   // Get data from Provider Config
+   var projCfg = new Pulumi.Config();
+   var configAzureNative = new Pulumi.Config("azure-native");
+   var location = configAzureNative.Require("location");
+   var sshPubKey = projCfg.Require("sshPubKey");
+   var subscriptionId = configAzureNative.Require("subscriptionId");
+
    // Create the "Hub" Resource Group and Virtual Network
    var hubResourceGroup = new Pulumi.AzureNative.Resources.ResourceGroup("rg-hub", new Pulumi.AzureNative.Resources.ResourceGroupArgs
    {
@@ -87,17 +94,16 @@ return await Deployment.RunAsync(() =>
       VirtualNetworkPeeringName = "hub-to-spoke",
    }, new CustomResourceOptions { DeleteBeforeReplace = true });
 
-   // Now create the private zone
-   var privateDnsZoneArgs = spokeResourceGroup.Apply(rg => new PrivateZoneArgs
+   var privateDnsZone = new Pulumi.AzureNative.Network.PrivateZone("privatelink-aks", new()
    {
-      ResourceGroupName = rg.Name,
-      PrivateZoneName = $"privatelink.{rg.Location}.azmks.io",
+      PrivateZoneName = $"privatelink.{location}.azmk8s.io",
+      ResourceGroupName = spokeResourceGroup.Name,
+      Location = "Global"
    });
 
-   var privateDnsZone = new Pulumi.AzureNative.Network.PrivateZone($"privatelink-{spokeResourceGroup.Apply(rg => rg.Location)}", privateDnsZoneArgs);
-
-
+   var aksCluster = new AksCluster(spokeResourceGroup.Name, privateDnsZone.Id, spokeSubnet.Id, sshPubKey, subscriptionId, spokeResourceGroup.Id, spokeVirtualNetwork.Id);
    return new Dictionary<string, object>
+
    {
          { "HubVNETId", hubVirtualNetwork.Id },
          { "SpokeVNETId", spokeVirtualNetwork.Id },

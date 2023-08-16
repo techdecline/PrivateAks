@@ -7,8 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="1.34.0" />
+    <PackageReference Include="Azure.Identity" Version="1.10.0" />
+    <PackageReference Include="Azure.ResourceManager" Version="1.7.0" />
+    <PackageReference Include="Azure.ResourceManager.Authorization" Version="1.0.1" />
     <PackageReference Include="Pulumi" Version="3.*" />
     <PackageReference Include="Pulumi.AzureNative" Version="2.3.0" />
+    <PackageReference Include="Pulumi.Random" Version="4.13.2" />
   </ItemGroup>
 
 </Project>
