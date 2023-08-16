@@ -7,13 +7,15 @@ class AksCluster
 {
     public AksCluster(Input<string> resourceGroupName, Input<string> privateDnsZoneId, Input<string> subnetId, Input<string> sshPublicKey, string subscriptionId, Input<string> resourceGroupId, Input<string> vnetId)
     {
+        string clusterName = "aks1";
         // Create Identity for Cluster
-        var azureHelper = new AzureHelper(subscriptionId);
-        string roleDefinitionManagedIdentityOperatorId = azureHelper.GetRoleByName("Managed Identity Operator");
-        var clusterIdentity = new ManagedIdentity(resourceGroupName, "clusterIdentity", roleDefinitionManagedIdentityOperatorId, resourceGroupId);
-
-        var roleAssignmentPrivateDnsContributor = new AzureRoleAssignment("Private DNS Zone Contributor", subscriptionId, clusterIdentity.PrincipalId, privateDnsZoneId);
-        var roleAssignmentNetworkContributor = new AzureRoleAssignment("Network Contributor", subscriptionId, clusterIdentity.PrincipalId, vnetId);
+        Dictionary<string,Input<string>> roleAssignmentDictionary = new Dictionary<string, Input<string>>
+        {
+            { "Managed Identity Operator", resourceGroupId },
+            { "Private DNS Zone Contributor", privateDnsZoneId },
+            { "Network Contributor", vnetId }
+        };
+        var clusterIdentity = new ManagedIdentity(resourceGroupName, "clusterIdentity", roleAssignmentDictionary, subscriptionId);
 
         AzureNative.ContainerService.ManagedCluster managedCluster = new AzureNative.ContainerService.ManagedCluster("managedCluster", new()
         {
@@ -47,7 +49,7 @@ class AksCluster
                 ScaleDownDelayAfterAdd = "15m",
                 ScanInterval = "20s",
             },
-            DnsPrefix = "dnsprefix1",
+            DnsPrefix = clusterName,
             EnableRBAC = true,
             KubernetesVersion = "1.26.6",
             LinuxProfile = new AzureNative.ContainerService.Inputs.ContainerServiceLinuxProfileArgs
@@ -85,12 +87,15 @@ class AksCluster
                 OutboundType = "loadBalancer",
             },
             ResourceGroupName = resourceGroupName,
-            ResourceName = "clustername1",
+            ResourceName = clusterName,
             Sku = new AzureNative.ContainerService.Inputs.ManagedClusterSKUArgs
             {
                 Name = "Base",
                 Tier = "Free",
             },
         });
+        ClusterId = managedCluster.Id;
     }
+    [Output] public Output<string> ClusterId { get; set; }
+
 }

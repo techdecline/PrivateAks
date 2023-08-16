@@ -1,32 +1,20 @@
 using Pulumi;
 using AzureNative = Pulumi.AzureNative;
+using System.Collections.Generic;
+using Pulumi.AzureNative.Authorization;
 
 class ManagedIdentity
 {
-    public ManagedIdentity(Input<string> resourceGroupName, string managedIdentityName, string roleDefinitionId, Input<string> roleAssignmentScope)
+    public ManagedIdentity(Input<string> resourceGroupName, string managedIdentityName, Dictionary<string, Input<string>> roleAssignmentList, string subscriptionId)
     {
         var identity = new AzureNative.ManagedIdentity.UserAssignedIdentity(managedIdentityName, new()
         {
             ResourceGroupName = resourceGroupName,
         });
-
-        if (roleDefinitionId != string.Empty)
+        
+        foreach (var roleAssignment in roleAssignmentList)
         {
-            var roleAssignmentGuid = new Pulumi.Random.RandomUuid($"guidRoleAssignment{managedIdentityName}");
-
-            var roleAssignment = new AzureNative.Authorization.RoleAssignment($"roleAssignment{managedIdentityName}", new()
-            {
-                PrincipalId = identity.PrincipalId,
-                PrincipalType = "ServicePrincipal",
-                RoleAssignmentName = roleAssignmentGuid.Result,
-                RoleDefinitionId = roleDefinitionId,
-                Scope = roleAssignmentScope,
-            });
-            RoleAssignmentId = roleAssignment.Id;
-        }
-        else
-        {
-            RoleAssignmentId = Output.Format($"{string.Empty}");
+            new AzureSPRoleAssignment(roleAssignment.Key, subscriptionId,identity.PrincipalId, roleAssignment.Value); 
         }
 
         ClientId = identity.ClientId;
@@ -37,5 +25,4 @@ class ManagedIdentity
     [Output] public Output<string> ClientId { get; set; }
     [Output] public Output<string> PrincipalId { get; set; }
     [Output] public Output<string> Id { get; set; }
-    [Output] public Output<string> RoleAssignmentId { get; set; }
 }
