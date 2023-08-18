@@ -2,11 +2,11 @@
 using Pulumi;
 using Pulumi.AzureNative;
 
-return await Deployment.RunAsync(() =>
+return await Pulumi.Deployment.RunAsync(() =>
 {
 
    // Set the stack name.
-   var stackName = Deployment.Instance.StackName;
+   var stackName = Pulumi.Deployment.Instance.StackName;
 
    // Get data from Provider Config
    var projCfg = new Pulumi.Config();
@@ -98,8 +98,15 @@ return await Deployment.RunAsync(() =>
    {
       PrivateZoneName = $"privatelink.{location}.azmk8s.io",
       ResourceGroupName = spokeResourceGroup.Name,
-      Location = "Global"
+      Location = "Global",
+      Tags =
+      {
+         { "linktohub", "true" },
+      },
    });
+
+   // Create Policy Definition
+   var policyDefition = new AzurePolicy(spokeResourceGroup.Name,"LinkDnsZoneVnet","./azurepolicy/deployZoneLinkPolicy.json");
 
    var aksCluster = new AksCluster(spokeResourceGroup.Name, privateDnsZone.Id, spokeSubnet.Id, sshPubKey, subscriptionId, spokeResourceGroup.Id, spokeVirtualNetwork.Id);
    return new Dictionary<string, object>
@@ -109,5 +116,6 @@ return await Deployment.RunAsync(() =>
          { "SpokeVNETId", spokeVirtualNetwork.Id },
          { "VNetPeeringHubId", vnetPeeringHub.Id },
          { "VNetPeeringSpokeId", vnetPeeringSpoke.Id },
+         {"PolicyDefinitionId", policyDefition.PolicyDefinitionId},
    };
 });

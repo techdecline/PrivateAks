@@ -2,27 +2,34 @@
 {
     "mode": "All",
     "parameters": {
-    "tagName": {
-        "type": "String",
-        "metadata": {
-        "displayName": "Tag Name",
-        "description": "Name of the tag, such as linktohub"
-        },
-        "defaultValue": "linktohub"
+        "tagName": {
+            "type": "String",
+            "metadata": {
+                "displayName": "Tag Name",
+                "description": "Name of the tag, such as linktohub"
+            },
+            "defaultValue": "linktohub"
         },
         "tagValue": {
             "type": "String",
             "metadata": {
-            "displayName": "Tag Value",
-            "description": "Value of the tag, such as true"
+                "displayName": "Tag Value",
+                "description": "Value of the tag, such as true"
             },
             "defaultValue": "true"
         },
         "virtualNetworkId": {
             "type": "String",
             "metadata": {
-            "description": "ID of the virtual network to link."
+                "description": "ID of the virtual network to link."
             }
+        },
+        "privateDnsZoneName": {
+            "type": "String",
+            "metadata":{
+                "description": "Dummy Value for provider bug."
+            },
+            "defaultValue": "*"
         }
     },
     "policyRule": {
@@ -61,13 +68,13 @@
                             "contentVersion": "1.0.0.0",
                             "parameters": {
                                 "privateDnsZoneName": {
-                                    "type": "string",
+                                    "type": "String",
                                     "metadata": {
                                         "description": "Name of the private DNS zone."
                                     }
                                 },
                                 "virtualNetworkId": {
-                                    "type": "string",
+                                    "type": "String",
                                     "metadata": {
                                     "description": "ID of the virtual network to link."
                                     }
@@ -93,10 +100,12 @@
                         },
                         "parameters": {
                             "privateDnsZoneName": {
-                                "value": "[field('name')]"
+                                "value": "[field('name')]",
+                                "type": "String"
                             },
                                 "virtualNetworkId": {
-                                "value": "[parameters('virtualNetworkId')]"
+                                "value": "[parameters('virtualNetworkId')]",
+                                "type": "String"
                             }
                         }
                     }
